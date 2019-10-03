@@ -39,6 +39,10 @@ MAAS_TEMPLATE = """
 
 
 def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+    """
+    Ordered load of params from yaml
+    required when setting user options in iDRAC
+    """
 
     class OrderedLoader(Loader):
         pass
@@ -87,7 +91,7 @@ def racadm_set(client, racadm_settings):
                         _, stdout, stderr = client.exec_command(cmd)
                         stdout, stderr = stdout.read(), stderr.read()
                         if 'successfully' in stdout:
-                            log.debug("Successfully set %s", cmd)
+                            log.debug("Successfully set: %s", cmd)
                         else:
                             log.error('stdout:%s stderr:%s', stdout, stderr)
                     else:
@@ -98,7 +102,7 @@ def racadm_set(client, racadm_settings):
                 _, stdout, stderr = client.exec_command(cmd)
                 stdout, stderr = stdout.read(), stderr.read()
                 if 'successfully' in stdout:
-                    log.debug("Successfully set %s", cmd)
+                    log.debug("Successfully set: %s", cmd)
                 else:
                     log.error('stdout:%s stderr:%s', stdout, stderr)
             else:
@@ -112,18 +116,23 @@ def racadm_get_mac(client, interface='NIC.Integrated.1-2-1'):
     Fetches MAC Address of boot interface
     """
     log.info("Getting MAC Address for %s", interface)
+    log.debug("Running: racadm hwinventory %s", interface)
     _, stdout, _ = client.exec_command('racadm hwinventory {}'.format(interface))
     try:
         mac = re.search(
             r'^Current .*MAC Address:\s+([0-9A-F\:]{17})\s+',
             stdout.read(),
             re.MULTILINE).groups()[0]
-    except IndexError:
+    except (AttributeError, IndexError):
         log.warn("Unabled to find MAC Address for %s", interface)
         return None
     return mac.lower()
 
+
 def render_template(hostprefix, hosttype, hostno, macaddress, password_generated):
+    """
+    Returns host configuration based on template
+    """
     return MAAS_TEMPLATE.format(
         hostprefix=hostprefix,
         hosttype=hosttype,
