@@ -28,10 +28,10 @@ MAAS_TEMPLATE = """
       mac: {macaddress}
       subnet: ${{_param:deploy_network_netmask}}
       gateway: ${{_param:deploy_network_gateway}}
-      ip: ${{_param:openstack_{hosttype}_node{hostno:2d}_deploy_address}}
+      ip: ${{_param:openstack_{hosttype}_node{hostnoshort:2s}_deploy_address}}
       mode: static
   power_parameters:
-    power_address: ${{_param:openstack_{hosttype}_node{hostno:2d}_ipmi_address}}
+    power_address: ${{_param:openstack_{hosttype}_node{hostnoshort:2s}_ipmi_address}}
     power_pass: {password_generated}
     power_type: ipmi
     power_user: maas
@@ -137,6 +137,7 @@ def render_template(hostprefix, hosttype, hostno, macaddress, password_generated
         hostprefix=hostprefix,
         hosttype=hosttype,
         hostno=hostno,
+        hostnoshort=str(hostno)[-2:],
         macaddress=macaddress,
         password_generated=password_generated)
 
