@@ -115,7 +115,7 @@ def racadm_get_mac(client, interface='NIC.Integrated.1-2-1'):
     _, stdout, _ = client.exec_command('racadm hwinventory {}'.format(interface))
     try:
         mac = re.search(
-            r'^Current MAC Address:\s+([0-9A-F\:]{17})\s+',
+            r'^Current .*MAC Address:\s+([0-9A-F\:]{17})\s+',
             stdout.read(),
             re.MULTILINE).groups()[0]
     except IndexError:
