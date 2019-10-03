@@ -22,7 +22,7 @@ MAAS_TEMPLATE = """
   disk_layout: ${{_param:maas_simple_disk_layout}}
   pxe_interface_mac: {macaddress}
   interfaces:
-  nic01:
+    nic01:
       type: eth
       name: eno2
       mac: {macaddress}
@@ -31,10 +31,10 @@ MAAS_TEMPLATE = """
       ip: ${{_param:openstack_{hosttype}_node{hostno:2d}_deploy_address}}
       mode: static
   power_parameters:
-  power_address: ${{_param:openstack_{hosttype}_node{hostno:2d}_ipmi_address}}
-  power_pass: {password_generated}
-  power_type: ipmi
-  power_user: maas
+    power_address: ${{_param:openstack_{hosttype}_node{hostno:2d}_ipmi_address}}
+    power_pass: {password_generated}
+    power_type: ipmi
+    power_user: maas
 """
 
 
