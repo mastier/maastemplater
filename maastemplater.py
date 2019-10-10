@@ -25,11 +25,14 @@ h.setFormatter(formatter)
 log.addHandler(h)
 logging.getLogger('paramiko').setLevel(logging.WARNING)
 
-MAAS_TEMPLATE = """
+MAAS_HEADER = """
 paramaters:
   maas:
     region:
       machines:
+"""
+
+MAAS_MACHINE_TEMPLATE = """
         {hostprefix}{hostno:3d}:
           disk_layout: ${{_param:maas_simple_disk_layout}}
           pxe_interface_mac: {macaddress}
@@ -154,7 +157,7 @@ def render_template(**kwargs):
     """
     Returns host configuration based on template
     """
-    return MAAS_TEMPLATE.format(**kwargs)
+    return MAAS_MACHINE_TEMPLATE.format(**kwargs)
 
 
 if __name__ == '__main__':
@@ -175,6 +178,8 @@ if __name__ == '__main__':
     output = open(args.maasmachines, 'w')
 
     host_summary = defaultdict(list)
+
+    output.write(MAAS_HEADER)
     for hostprefix, hosts in settings['hosts'].items():
         for idx, host in enumerate(hosts):
             sshclient = SSHClient()
