@@ -24,7 +24,7 @@ MAAS_TEMPLATE = """
   interfaces:
     nic01:
       type: eth
-      name: eno2
+      name: {interface}
       mac: {macaddress}
       subnet: ${{_param:deploy_network_netmask}}
       gateway: ${{_param:deploy_network_gateway}}
@@ -36,6 +36,15 @@ MAAS_TEMPLATE = """
     power_type: ipmi
     power_user: maas
 """
+
+INTERFACE_HW_DICT = {
+    'kvm': 'NIC.Slot.1-1-1',
+    'cmp': 'NIC.Integrated.1-1-1',
+}
+INTERFACE_NAME_DICT = {
+    'kvm': 'enp65s0f0',
+    'cmp': 'eno1',
+}
 
 
 def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
@@ -129,17 +138,11 @@ def racadm_get_mac(client, interface='NIC.Integrated.1-2-1'):
     return mac.lower()
 
 
-def render_template(hostprefix, hosttype, hostno, macaddress, password_generated):
+def render_template(**kwargs):
     """
     Returns host configuration based on template
     """
-    return MAAS_TEMPLATE.format(
-        hostprefix=hostprefix,
-        hosttype=hosttype,
-        hostno=hostno,
-        hostnoshort=str(hostno)[-2:],
-        macaddress=macaddress,
-        password_generated=password_generated)
+    return MAAS_TEMPLATE.format(**kwargs)
 
 
 if __name__ == '__main__':
@@ -172,8 +175,10 @@ if __name__ == '__main__':
             log.info('Writing template to %s', args.maasmachines)
             output.write(
                 render_template(
-                    hostprefix,
-                    settings['hosttype'][hostprefix],
-                    settings['hosts_start']+idx,
-                    racadm_get_mac(sshclient),
-                    password_gen))
+                    hostprefix=hostprefix,
+                    hosttype=settings['hosttype'][hostprefix],
+                    hostno=settings['hosts_start']+idx,
+                    hostnoshort=str(settings['hosts_start']+idx)[-2:],
+                    macaddress=racadm_get_mac(sshclient, INTERFACE_HW_DICT[settings['hosttype'][hostprefix]]),
+                    interface=INTERFACE_NAME_DICT[settings['hosttype'][hostprefix]],
+                    password_generated=password_generated))
