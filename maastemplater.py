@@ -189,4 +189,4 @@ if __name__ == '__main__':
                     hostnoshort=str(settings['hosts_start']+idx)[-2:],
                     macaddress=racadm_get_mac(sshclient, INTERFACE_HW_DICT[settings['hosttype'][hostprefix]]),
                     interface=INTERFACE_NAME_DICT[settings['hosttype'][hostprefix]],
-                    password_generated=password_generated))
+                    password_generated=password_gen))
