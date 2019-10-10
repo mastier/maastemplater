@@ -25,23 +25,27 @@ log.addHandler(h)
 logging.getLogger('paramiko').setLevel(logging.WARNING)
 
 MAAS_TEMPLATE = """
-{hostprefix}{hostno:3d}:
-  disk_layout: ${{_param:maas_simple_disk_layout}}
-  pxe_interface_mac: {macaddress}
-  interfaces:
-    nic01:
-      type: eth
-      name: {interface}
-      mac: {macaddress}
-      subnet: ${{_param:deploy_network_netmask}}
-      gateway: ${{_param:deploy_network_gateway}}
-      ip: ${{_param:openstack_{hosttype}_node{hostnoshort:2s}_deploy_address}}
-      mode: static
-  power_parameters:
-    power_address: ${{_param:openstack_{hosttype}_node{hostnoshort:2s}_ipmi_address}}
-    power_pass: {password_generated}
-    power_type: ipmi
-    power_user: maas
+paramaters:
+  maas:
+    region:
+      machines:
+        {hostprefix}{hostno:3d}:
+          disk_layout: ${{_param:maas_simple_disk_layout}}
+          pxe_interface_mac: {macaddress}
+          interfaces:
+            nic01:
+              type: eth
+              name: {interface}
+              mac: {macaddress}
+              subnet: ${{_param:deploy_network_netmask}}
+              gateway: ${{_param:deploy_network_gateway}}
+              ip: ${{_param:openstack_{hosttype}_node{hostnoshort:2s}_deploy_address}}
+              mode: static
+          power_parameters:
+            power_address: ${{_param:openstack_{hosttype}_node{hostnoshort:2s}_ipmi_address}}
+            power_pass: {password_generated}
+            power_type: ipmi
+            power_user: maas
 """
 
 INTERFACE_HW_DICT = {
