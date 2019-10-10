@@ -8,13 +8,14 @@ import random
 import string
 import re
 import sys
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import logging
 import argparse
 
 import yaml
 from paramiko.client import SSHClient
 import paramiko
+from paramiko.ssh_exception import AuthenticationException
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -173,24 +174,33 @@ if __name__ == '__main__':
 
     output = open(args.maasmachines, 'w')
 
+    host_summary = defaultdict(list)
     for hostprefix, hosts in settings['hosts'].items():
         for idx, host in enumerate(hosts):
             sshclient = SSHClient()
             sshclient.set_missing_host_key_policy(paramiko.client.AutoAddPolicy)
             log.info("Connecting to host %s", host)
-            sshclient.connect(
-                host,
-                username=settings['credentials']['username'],
-                password=settings['credentials']['password'])
-            log.info('Applying racadm settings from %s', args.settings_file)
-            password_gen = racadm_set(sshclient, settings['racadm'])
-            log.info('Writing template to %s', args.maasmachines)
-            output.write(
-                render_template(
-                    hostprefix=hostprefix,
-                    hosttype=settings['hosttype'][hostprefix],
-                    hostno=settings['hosts_start']+idx,
-                    hostnoshort=str(settings['hosts_start']+idx)[-2:],
-                    macaddress=racadm_get_mac(sshclient, INTERFACE_HW_DICT[settings['hosttype'][hostprefix]]),
-                    interface=INTERFACE_NAME_DICT[settings['hosttype'][hostprefix]],
-                    password_generated=password_gen))
+            try:
+                sshclient.connect(
+                    host,
+                    username=settings['credentials']['username'],
+                    password=settings['credentials']['password'])
+                log.info('Applying racadm settings from %s', args.settings_file)
+                password_gen = racadm_set(sshclient, settings['racadm'])
+                log.info('Writing template to %s', args.maasmachines)
+                output.write(
+                    render_template(
+                        hostprefix=hostprefix,
+                        hosttype=settings['hosttype'][hostprefix],
+                        hostno=settings['hosts_start']+idx,
+                        hostnoshort=str(settings['hosts_start']+idx)[-2:],
+                        macaddress=racadm_get_mac(sshclient, INTERFACE_HW_DICT[settings['hosttype'][hostprefix]]),
+                        interface=INTERFACE_NAME_DICT[settings['hosttype'][hostprefix]],
+                        password_generated=password_gen))
+                host_summary['done'].append(host)
+            except AuthenticationException:
+                log.warn('Failed authentication with host %s', host)
+                host_summary['failed'].append(host)
+    log.info('SUMMARY: - host done: %s, - host failed: %s',
+        ', '.join(host_summary['done']),
+        ', '.join(host_summary['failed']))
