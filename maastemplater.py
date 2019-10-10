@@ -7,15 +7,22 @@ Simple script to prepare machines /w iDRAC for MAAS
 import random
 import string
 import re
+import sys
 from collections import OrderedDict
-import logging as log
+import logging
 import argparse
 
 import yaml
 from paramiko.client import SSHClient
 import paramiko
 
-log.basicConfig(format='%(name)s [%(levelname)s] - %(message)s', level=log.DEBUG)
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+h = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(name)s [%(levelname)s] - %(message)s')
+h.setFormatter(formatter)
+log.addHandler(h)
+logging.getLogger('paramiko').setLevel(logging.WARNING)
 
 MAAS_TEMPLATE = """
 {hostprefix}{hostno:3d}:
@@ -171,6 +178,7 @@ if __name__ == '__main__':
                 host,
                 username=settings['credentials']['username'],
                 password=settings['credentials']['password'])
+            log.info('Applying racadm settings from %s', args.settings_file)
             password_gen = racadm_set(sshclient, settings['racadm'])
             log.info('Writing template to %s', args.maasmachines)
             output.write(
