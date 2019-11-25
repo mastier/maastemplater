@@ -57,7 +57,7 @@ INTERFACE_HW_DICT = {
     'cmp': 'NIC.Integrated.1-1-1',
 }
 INTERFACE_NAME_DICT = {
-    'kvm': 'enp65s0f0',
+    'kvm': 'enp4s0f0',
     'cmp': 'eno1',
 }
 
@@ -171,9 +171,18 @@ if __name__ == '__main__':
         '--settings_file', '-f',
         default='settings.yaml',
         help='YAML file with settings (look settings.yaml.sample)')
+    parser.add_argument(
+        '--shutdown',
+        action="store_true",
+        help='Shutdown nodes after provisioning (that requires interactive confirmation!)')
     args = parser.parse_args()
 
     settings = load_settings(args.settings_file)
+
+    if args.shutdown:
+        answer = raw_input("Are you sure you want to shutdown hosts after provisioning?! [y/N]")
+        if answer not in ('y','yes'):
+            args.shutdown = False
 
     output = open(args.maasmachines, 'w')
 
@@ -192,6 +201,8 @@ if __name__ == '__main__':
                     password=settings['credentials']['password'])
                 log.info('Applying racadm settings from %s', args.settings_file)
                 password_gen = racadm_set(sshclient, settings['racadm'])
+                if args.shutdown:
+                    sshclient.exec_command('racadm server powerdown')
                 log.info('Writing template to %s', args.maasmachines)
                 output.write(
                     render_template(
